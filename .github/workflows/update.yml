@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       rebuild:
-        description: '完全用官方 gfwlist 重建 GFW 段（默认合并保留旧条目）'
+        description: 'Rebuild'
         required: false
         default: false
         type: boolean

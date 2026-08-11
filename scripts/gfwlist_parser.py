@@ -9,16 +9,28 @@ RCL4SSR gfwlist parser
 
 用法:
     python scripts/gfwlist_parser.py [--file Ruleset/ProxyGFWlist.list] [--rebuild] [--dry-run] [--quiet]
+                                      [--no-exclude] [--no-exclude-keywords] [--exclude-from Ruleset]
 
-    --rebuild  完全用官方 gfwlist 重建 GFW 段(默认合并保留旧条目)
-    --dry-run  只打印统计，不写文件
+    --rebuild              完全用官方 gfwlist 重建 GFW 段(默认合并保留旧条目)
+    --dry-run              只打印统计，不写文件
+    --no-exclude           不排除其他规则集已覆盖的域名(默认会排除)
+    --no-exclude-keywords  不进行关键词排除(仅保留域名级排除)
+    --exclude-from DIR     扫描排除项的规则集目录(默认 Ruleset)
+
+行为:
+    - 默认(合并模式)：新段 = 官方 gfwlist ∪ 旧 GFW 段条目，规则只增不减。
+    - 默认会从 GFW 段中剔除其他规则集(AI/Telegram/FMEDIA 等)已覆盖的域名，
+      避免同一域名在多个规则组里重复出现。例如 AI.list 的 DOMAIN-KEYWORD,grok
+      会自动把 GFW 段里的 grok.com / grokipedia.com 剔除。
 
 依赖: 仅 Python 3 标准库。
 """
 
 import argparse
 import base64
+import glob
 import ipaddress
+import os
 import re
 import sys
 import urllib.request
@@ -101,6 +113,50 @@ def parse_gfwlist(text):
     return rules
 
 
+def collect_exclusions(scan_dir, target_file):
+    """扫描其他规则集文件，收集已覆盖的排除项。
+
+    返回 (suffix_exact, keywords)：
+    - suffix_exact: DOMAIN-SUFFIX / DOMAIN 后的域名集合
+    - keywords:     DOMAIN-KEYWORD 后的关键词集合
+    """
+    suffix_exact = set()
+    keywords = set()
+    target_abs = os.path.abspath(target_file)
+    for path in sorted(glob.glob(os.path.join(scan_dir, "*.list"))):
+        if os.path.abspath(path) == target_abs:
+            continue  # 不扫描目标文件自身(其头部/尾部是保留内容)
+        with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                line = line.strip()
+                if line.startswith("DOMAIN-SUFFIX,") or line.startswith("DOMAIN,"):
+                    item = line.split(",", 1)[1].strip().lower()
+                    if item:
+                        suffix_exact.add(item)
+                elif line.startswith("DOMAIN-KEYWORD,"):
+                    item = line.split(",", 1)[1].strip().lower()
+                    if item:
+                        keywords.add(item)
+    return suffix_exact, keywords
+
+
+def apply_exclusions(rules, suffix_exact, keywords):
+    """剔除 GFW 段中已被其他规则集覆盖的条目。"""
+    out = []
+    for rule in rules:
+        if rule.startswith("DOMAIN-SUFFIX,"):
+            host = rule.split(",", 1)[1].strip()
+            parts = host.split(".")
+            # 域名级：host 本身或任一父域已在其他规则集 => 剔除
+            if any(".".join(parts[i:]) in suffix_exact for i in range(len(parts))):
+                continue
+            # 关键词级：host 含其他规则集的关键词 => 剔除
+            if any(keyword in host for keyword in keywords):
+                continue
+        out.append(rule)
+    return out
+
+
 def build_section(rules, legacy_rules=None):
     """生成新 GFW 段；gfwlist.start/end 固定放段首/段尾。
 
@@ -146,6 +202,12 @@ def main():
     parser.add_argument("--file", default="Ruleset/ProxyGFWlist.list")
     parser.add_argument("--rebuild", action="store_true",
                         help="完全用官方 gfwlist 重建 GFW 段(默认合并保留旧条目)")
+    parser.add_argument("--no-exclude", action="store_true",
+                        help="不排除其他规则集已覆盖的域名(默认会排除)")
+    parser.add_argument("--no-exclude-keywords", action="store_true",
+                        help="不进行关键词排除(仅保留域名级排除)")
+    parser.add_argument("--exclude-from", default="Ruleset",
+                        help="扫描排除项的规则集目录(默认 Ruleset)")
     parser.add_argument("--dry-run", action="store_true", help="只打印统计，不写文件")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args()
@@ -163,7 +225,21 @@ def main():
     head, tail, marker_idx, end_idx = split_file(lines)
     old_section = [l for l in lines[marker_idx + 1 : end_idx] if l.strip()]
     legacy = None if args.rebuild else [l for l in old_section if l.startswith("DOMAIN-SUFFIX,")]
-    section = build_section(rules, legacy)
+
+    base = set(rules)
+    if legacy is not None:
+        base |= set(legacy)
+
+    excluded = 0
+    if not args.no_exclude:
+        suffix_exact, keywords = collect_exclusions(args.exclude_from, args.file)
+        if args.no_exclude_keywords:
+            keywords = set()
+        before = len(base)
+        base = set(apply_exclusions(base, suffix_exact, keywords))
+        excluded = before - len(base)
+
+    section = build_section(base)
     old_len = len(old_section)
 
     new_text = "\n".join(head + section + [""] + tail)
@@ -178,7 +254,8 @@ def main():
     if args.dry_run:
         if not args.quiet:
             mode = "rebuild" if args.rebuild else "merge"
-            print("[~] dry-run(%s)：GFW 段 %d 行 -> %d 行" % (mode, old_len, len(section)))
+            excl = ("，剔除重复 %d 条" % excluded) if not args.no_exclude else "，排除已禁用"
+            print("[~] dry-run(%s)：GFW 段 %d 行 -> %d 行%s" % (mode, old_len, len(section), excl))
             if old_section:
                 print("    当前段首/段尾: %s | %s" % (old_section[0], old_section[-1]))
             print("    新段首/段尾: %s | %s" % (section[0], section[-1]))
@@ -186,7 +263,8 @@ def main():
 
     with open(args.file, "w", encoding="utf-8", newline="\n") as f:
         f.write(new_text)
-    print("[+] 已更新 %s : GFW 段 %d 行 -> %d 行" % (args.file, old_len, len(section)))
+    excl = ("，剔除重复 %d 条" % excluded) if not args.no_exclude else "，排除已禁用"
+    print("[+] 已更新 %s : GFW 段 %d 行 -> %d 行%s" % (args.file, old_len, len(section), excl))
     return 0
 
 
