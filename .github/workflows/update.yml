@@ -1,0 +1,47 @@
+name: Update GFWList Rules
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    branches:
+      - master
+    inputs:
+      rebuild:
+        description: '完全用官方 gfwlist 重建 GFW 段（默认合并保留旧条目）'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  update:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: write
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Parse GFWList
+        run: python scripts/gfwlist_parser.py${{ inputs.rebuild && ' --rebuild' || '' }}
+
+      - name: Get current datetime
+        id: datetime
+        run: echo "datetime=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: '[AutoUpdate] Update GFWList rules - ${{ steps.datetime.outputs.datetime }}'
+          push: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
