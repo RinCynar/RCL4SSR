@@ -4,7 +4,6 @@ mixed-port: 8900
 redir-port: 8963
 tproxy-port: 8964
 ipv6: true
-
 dns:
   enable: true
   ipv6: true
@@ -20,27 +19,21 @@ dns:
   respect-rules: true
   prefer-h3: true
   use-system-hosts: true
-  
   default-nameserver:
     - 2001:4860:4860::8888
     - 2606:4700:4700::1111
     - 8.8.8.8
     - 1.1.1.1
-
   proxy-server-nameserver:
     - https://dns.google/dns-query
-    - https://cloudflare-dns.com/dns-query
-    
+    - https://cloudflare-dns.com/dns-query    
   direct-nameserver:
     - https://cloudflare-dns.com/dns-query
-    - https://dns.google/dns-query
-    
+    - https://dns.google/dns-query   
   nameserver:
     - https://dns.google/dns-query
     - https://cloudflare-dns.com/dns-query
-
 unified-delay: true
-
 geodata-mode: true
 geodata-loader: memconservative
 geox-url:
