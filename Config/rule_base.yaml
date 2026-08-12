@@ -3,6 +3,7 @@ socks-port: 8962
 mixed-port: 8900
 redir-port: 8963
 tproxy-port: 8964
+udp: true
 ipv6: true
 dns:
   enable: true
