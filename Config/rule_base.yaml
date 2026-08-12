@@ -10,7 +10,7 @@ dns:
   ipv6: true
   listen: '[::]:1053'
   fake-ip-range: 198.18.0.1/16
-  fake-ip-range6: fc00::/18
+  fake-ip-range6: fdfe:dcba:9876::1/64
   use-hosts: true
   enhanced-mode: fake-ip
   fake-ip-filter:
