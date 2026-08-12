@@ -3,12 +3,7 @@ socks-port: 8962
 mixed-port: 8900
 redir-port: 8963
 tproxy-port: 8964
-allow-lan: true
-bind-address: "*"
 ipv6: true
-mode: rule
-log-level: silent
-external-controller: '[::]:9090'
 
 dns:
   enable: true
@@ -54,36 +49,6 @@ dns:
       - https://dns.google/dns-query
 
 unified-delay: true
-external-ui: ui
-external-ui-name: zERO
-external-ui-url: https://github.com/Zephyruso/zashboard/releases/latest/download/dist-no-fonts.zip
-
-tun:
-  enable: true
-  device: zERO
-  stack: mixed
-  mtu: 1485
-  dns-hijack:
-    - tcp://any:53
-    - udp://any:53
-  auto-route: false
-  auto-redirect: false
-  auto-detect-interface: false
-  disable-icmp-forwarding: true
-
-sniffer:
-  enable: true
-  sniff:
-    HTTP:
-      ports: [80, 8080-8880]
-    TLS:
-      ports: [443, 8443]
-    QUIC:
-      ports: [443]
-
-profile:
-  store-selected: true
-  store-fake-ip: true
 
 geodata-mode: true
 geodata-loader: memconservative
@@ -92,5 +57,3 @@ geox-url:
   mmdb: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb
   geoip: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
   asn: https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
-geo-auto-update: false
-geo-update-interval: 144
