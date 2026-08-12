@@ -38,15 +38,6 @@ dns:
   nameserver:
     - https://dns.google/dns-query
     - https://cloudflare-dns.com/dns-query
-    
-  direct-nameserver-follow-policy: true
-  nameserver-policy:
-    geosite:geolocation-!cn:
-      - https://dns.google/dns-query
-      - https://cloudflare-dns.com/dns-query
-    geosite:geolocation-cn:
-      - https://cloudflare-dns.com/dns-query
-      - https://dns.google/dns-query
 
 unified-delay: true
 
