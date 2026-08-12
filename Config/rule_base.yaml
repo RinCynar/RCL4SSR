@@ -53,7 +53,6 @@ dns:
       - https://cloudflare-dns.com/dns-query
       - https://dns.google/dns-query
 
-find-process-mode: off
 unified-delay: true
 external-ui: ui
 external-ui-name: zERO
