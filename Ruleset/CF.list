@@ -1,5 +1,5 @@
 DOMAIN-SUFFIX,cloudflareclient.com
-DOMAIN-SUFFIX,api.devices.cloudflare.com
+DOMAIN-SUFFIX,cloudflare.com
 DOMAIN-SUFFIX,argotunnel.com
 IP-CIDR,162.159.192.0/24,no-resolve
 IP-CIDR,162.159.193.0/24,no-resolve
