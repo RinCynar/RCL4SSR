@@ -1,14 +1,4 @@
 DOMAIN-SUFFIX,rincynar.top
 DOMAIN-SUFFIX,asailor.org
 DOMAIN-SUFFIX,gfiber.com
-DOMAIN-SUFFIX,cloudflareclient.com
 DOMAIN-SUFFIX,cloudflare.com
-DOMAIN-SUFFIX,argotunnel.com
-IP-CIDR,162.159.192.0/24,no-resolve
-IP-CIDR,162.159.193.0/24,no-resolve
-IP-CIDR,162.159.195.0/24,no-resolve
-IP-CIDR,162.159.197.0/24,no-resolve
-IP-CIDR,162.159.137.0/24,no-resolve
-IP-CIDR,188.114.96.0/22,no-resolve
-IP-CIDR6,2606:4700:d0::/48,no-resolve
-IP-CIDR6,2606:4700:d1::/48,no-resolve
