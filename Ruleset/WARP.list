@@ -1,8 +1,7 @@
 DOMAIN-SUFFIX,cloudflareclient.com
 DOMAIN-SUFFIX,cloudflaregateway.com
 DOMAIN-SUFFIX,argotunnel.com
-DOMAIN,api.cloudflareclient.com
-DOMAIN,gateway.zero-trust.cloudflare.com
+DOMAIN-SUFFIX,cloudflare.com
 DOMAIN-KEYWORD,warp
 IP-CIDR,162.159.192.0/18,no-resolve
 IP-CIDR,162.159.137.0/24,no-resolve
